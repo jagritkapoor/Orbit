@@ -1,0 +1,23 @@
+# Rust / Tauri backend
+target/
+src-tauri/target/
+Cargo.lock
+
+# Node / frontend
+node_modules/
+dist/
+.vite/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Environment
+.env
+.env.local
+
+# Editor
+.idea/
+.vscode/settings.json
+*.swp
