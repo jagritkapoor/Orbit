@@ -1,0 +1,1 @@
+ALTER TABLE timers ADD COLUMN phase TEXT NOT NULL DEFAULT 'focus';

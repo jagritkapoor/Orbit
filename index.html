@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/satellite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Orbit</title>
+    <script>
+      (function () {
+        var dark = localStorage.getItem("orbit-theme") === "dark";
+        document.documentElement.classList.add(dark ? "dark" : "light");
+      })();
+    </script>
+    <style>
+      /* Critical background applied before Vite's CSS bundle loads — prevents flash */
+      html, body, #root { height: 100%; margin: 0; }
+      html.dark  body { background: #141420; }
+      html.light body { background: #f7f7f9; }
+    </style>
+  </head>
+
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

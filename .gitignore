@@ -1,23 +1,29 @@
-# Rust / Tauri backend
-target/
-src-tauri/target/
-Cargo.lock
+# Dependencies
+node_modules
 
-# Node / frontend
-node_modules/
-dist/
-.vite/
+# Build output
+dist
+dist-ssr
+
+# Tauri build output
+src-tauri/target
+
+# Local env
+*.local
+*.log
+
+# Editor
+.vscode/*
+!.vscode/extensions.json
+.idea
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
 
 # macOS
 .DS_Store
-.AppleDouble
-.LSOverride
 
-# Environment
-.env
-.env.local
-
-# Editor
-.idea/
-.vscode/settings.json
-*.swp
+# Claude Code memory
+.claude/

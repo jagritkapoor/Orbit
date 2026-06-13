@@ -1,8 +1,8 @@
 # Scratchpad App — Build Plan
 
-> **Status:** Pre-implementation design phase  
-> **Last updated:** 2026-06-12  
-> **Pending:** Open questions Q1–Q11 (most have assumed defaults)
+> **Status:** Active development — phases 0–4 complete  
+> **Last updated:** 2026-06-13  
+> **Up next:** Remaining feature queue (see bottom of file)
 
 ---
 
@@ -1212,3 +1212,58 @@ These rules prevent the most common pitfalls:
 5. **Global shortcut is registered in Rust, not JavaScript.** JavaScript cannot register global shortcuts. This is a Tauri Rust command.
 
 6. **Debounce parse and save separately.** Parse at 150ms (for responsive inline results). Save at 500ms (to avoid excessive DB writes). These are independent timers.
+
+---
+
+## Remaining Feature Queue (as of 2026-06-13)
+
+Phases 0–4 are complete. The following features are agreed and ordered:
+
+### 1. Undo Toast on Note Delete
+- `Cmd+Backspace` no longer deletes immediately
+- Note is soft-removed from the UI (filtered from the notes array, navigated away from) but NOT deleted from DB yet
+- An animated toast slides up from the bottom: "Note deleted" + Undo button + 5-second progress bar draining to zero
+- Pressing Undo (or `Cmd+Z`) within 5 seconds restores the note and navigates back to it
+- After 5 seconds: actual `db.deleteNote()` is called, toast slides away
+- Toast is fully themed (light/dark), matches app design language
+
+### 2. Date Modified Footer + Auto-Sort
+- A small dimmed timestamp shown at the bottom of each note ("edited 2 hours ago" style, or absolute date)
+- Notes sorted by `updated_at` descending — most recently modified = rightmost (index 0), oldest = leftmost
+- `updated_at` written to DB on every auto-save
+
+### 3. Search (`Cmd+F`)
+- Full-screen overlay triggered by `Cmd+F`
+- Fuzzy search across all note content using fuse.js
+- Results show: date, matching snippet with highlighted terms
+- Selecting a result navigates to that note and dismisses the overlay
+- `Escape` dismisses without navigating
+
+### 4. Markdown Syntax Highlighting (Option 1)
+- Install `@codemirror/lang-markdown` and wire it into the CM6 editor
+- Syntax highlighting only — markers stay visible, text is styled:
+  - `**bold**` → bold weight
+  - `*italic*` → italic style
+  - `# Heading` → larger, bolder
+  - `` `inline code` `` → monospace with subtle background tint
+  - `~~strikethrough~~` → strikethrough
+- Must not conflict with existing tag system (`list:`, `math:`, `//` comments)
+- Option 2 (live preview / hide markers) deferred to a later phase
+
+### 5. Timer Notifications (macOS)
+- When a timer finishes and the app window is hidden, fire a macOS system notification
+- Notification text: timer label (if set) or generic "Timer done"
+- Clicking the notification brings Orbit to front so the user sees the in-app animation
+
+### 6. Greeter / Welcome Note
+- On very first launch (checked via `has_seen_welcome` flag in `settings` table), insert a pre-written note
+- Covers: `//` comments, `math:`, `list:`, `sum:`, `avg:`, `timer:`, `timer:pomo`
+- Covers keyboard shortcuts: `Cmd+N`, `Cmd+Backspace`, `Cmd+[` / `Cmd+]`, `Cmd+F`, `Escape`
+- Styled as a real note (not a modal), so the user sees exactly what the app looks like in use
+
+### 7. DMG Packaging
+- Configure Tauri bundler for `.dmg` output
+- App icon finalised
+- Code-signed build (if Apple Developer account available)
+- Test install on a clean machine
+
