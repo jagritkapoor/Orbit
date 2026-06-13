@@ -1,3 +1,4 @@
+use std::sync::{Arc, atomic::{AtomicBool, Ordering}};
 use tauri::{
     menu::{Menu, MenuItem},
     tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
@@ -53,8 +54,15 @@ pub fn run() {
             let quit = MenuItem::with_id(app, "quit", "Quit Orbit", true, None::<&str>)?;
             let menu = Menu::with_items(app, &[&quit])?;
 
+            let icon_bytes = include_bytes!("../icons/32x32.png");
+            let img = image::load_from_memory(icon_bytes)
+                .expect("failed to decode tray icon")
+                .to_rgba8();
+            let (w, h) = img.dimensions();
+            let tray_icon = tauri::image::Image::new_owned(img.into_raw(), w, h);
+
             let _tray = TrayIconBuilder::new()
-                .icon(app.default_window_icon().cloned().unwrap())
+                .icon(tray_icon)
                 .icon_as_template(true)
                 .menu(&menu)
                 .show_menu_on_left_click(false)
@@ -86,6 +94,14 @@ pub fn run() {
             window.set_visible_on_all_workspaces(true)?;
 
             // Intercept close button, focus loss — hide instead of quit/close
+            // Grace period prevents the startup focus-loss event from immediately hiding the window
+            let ready = Arc::new(AtomicBool::new(false));
+            let ready_clone = ready.clone();
+            std::thread::spawn(move || {
+                std::thread::sleep(std::time::Duration::from_millis(500));
+                ready_clone.store(true, Ordering::Relaxed);
+            });
+
             let win_close = window.clone();
             window.on_window_event(move |event| {
                 match event {
@@ -94,7 +110,9 @@ pub fn run() {
                         let _ = win_close.hide();
                     }
                     tauri::WindowEvent::Focused(false) => {
-                        let _ = win_close.hide();
+                        if ready.load(Ordering::Relaxed) {
+                            let _ = win_close.hide();
+                        }
                     }
                     _ => {}
                 }
@@ -122,7 +140,8 @@ pub fn run() {
                 },
             )?;
 
-            // Accessory-policy apps don't activate automatically on launch — focus the window explicitly
+            // Accessory-policy apps don't activate automatically on launch — show and focus explicitly
+            let _ = window.show();
             let _ = window.set_focus();
 
             Ok(())

@@ -54,6 +54,15 @@ npm run tauri build
 
 Output: `src-tauri/target/release/bundle/`
 
+## Uninstalling
+
+Deleting the app from Applications does **not** delete your notes. To fully remove Orbit:
+
+1. Delete `Orbit.app` from `/Applications`
+2. Delete the data folder: `~/Library/Application Support/com.jagrit.orbit`
+
+In Finder: press `Cmd+Shift+G`, paste `~/Library/Application Support`, then delete the `com.jagrit.orbit` folder (toggle hidden files with `Cmd+Shift+.` if it's not visible).
+
 ## Releases
 
 Releases are built automatically via GitHub Actions when a tag is pushed:

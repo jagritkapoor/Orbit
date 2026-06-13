@@ -27,7 +27,7 @@
       }
     ],
     "security": {
-      "csp": "default-src 'self' tauri: asset: https://asset.localhost; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; connect-src https://api.frankfurter.dev"
+      "csp": null
     }
   },
   "bundle": {
