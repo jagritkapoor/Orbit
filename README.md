@@ -54,6 +54,16 @@ npm run tauri build
 
 Output: `src-tauri/target/release/bundle/`
 
+## Installing on macOS
+
+After dragging Orbit into Applications and opening it for the first time, macOS may show **"Orbit is damaged and can't be opened."** This is a Gatekeeper quarantine warning for apps downloaded outside the App Store. Run this command once to clear it:
+
+```bash
+xattr -cr /Applications/Orbit.app
+```
+
+Then open Orbit normally.
+
 ## Uninstalling
 
 Deleting the app from Applications does **not** delete your notes. To fully remove Orbit:
