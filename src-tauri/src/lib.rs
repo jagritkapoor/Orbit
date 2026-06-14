@@ -8,54 +8,39 @@ use tauri_plugin_sql::{Migration, MigrationKind};
 
 #[cfg(target_os = "macos")]
 fn setup_notification_delegate() {
-    use objc2::runtime::{AnyClass, AnyObject, AnyProtocol, ClassBuilder, Sel};
+    use objc2::ffi::class_addMethod;
+    use objc2::runtime::{AnyClass, AnyObject, Bool, Imp, Sel};
     use objc2::sel;
     use std::sync::Once;
 
-    static REGISTER: Once = Once::new();
-    REGISTER.call_once(|| {
-        // UNNotificationPresentationOptions bit flags:
-        // Sound=1, Alert=2, Banner=4, List=8
-        // Use all four so banners appear on macOS 10.15 (alert) and 11+ (banner+list)
-        const PRESENT_OPTIONS: usize = 1 | 2 | 4 | 8;
-
-        unsafe extern "C-unwind" fn will_present(
-            _this: &AnyObject,
+    static PATCHED: Once = Once::new();
+    PATCHED.call_once(|| {
+        // mac-notification-sys uses NSUserNotificationCenter with a delegate class called
+        // NotificationCenterDelegate. That class handles didDeliver/didActivate/didDismiss
+        // but does NOT implement shouldPresentNotification:, so macOS suppresses banners
+        // when Orbit is considered foreground. Patch it here at startup.
+        unsafe extern "C-unwind" fn should_present(
+            _this: *mut AnyObject,
             _cmd: Sel,
             _center: *mut AnyObject,
             _notification: *mut AnyObject,
-            completion_handler: *const block2::Block<dyn Fn(usize)>,
-        ) {
-            if let Some(handler) = unsafe { completion_handler.as_ref() } {
-                handler.call((PRESENT_OPTIONS,));
-            }
+        ) -> Bool {
+            Bool::YES
         }
 
         unsafe {
-            let ns_object = AnyClass::get(c"NSObject").expect("NSObject not found");
-            let mut builder = ClassBuilder::new(c"OrbitNotifDelegate", ns_object)
-                .expect("OrbitNotifDelegate class already registered");
-
-            if let Some(proto) = AnyProtocol::get(c"UNUserNotificationCenterDelegate") {
-                builder.add_protocol(proto);
+            if let Some(cls) = AnyClass::get(c"NotificationCenterDelegate") {
+                // Encoding: BOOL return, id self, SEL _cmd, id center, id notification
+                class_addMethod(
+                    cls as *const AnyClass as *mut AnyClass,
+                    sel!(userNotificationCenter:shouldPresentNotification:),
+                    std::mem::transmute::<
+                        unsafe extern "C-unwind" fn(*mut AnyObject, Sel, *mut AnyObject, *mut AnyObject) -> Bool,
+                        Imp,
+                    >(should_present),
+                    c"B@:@@".as_ptr(),
+                );
             }
-
-            builder.add_method(
-                sel!(userNotificationCenter:willPresentNotification:withCompletionHandler:),
-                will_present as unsafe extern "C-unwind" fn(_, _, _, _, _),
-            );
-
-            let cls = builder.register();
-
-            // Instantiate delegate and set on UNUserNotificationCenter
-            let center_cls = AnyClass::get(c"UNUserNotificationCenter")
-                .expect("UNUserNotificationCenter not found");
-            let center: *mut AnyObject =
-                objc2::msg_send![center_cls, currentNotificationCenter];
-            let delegate: *mut AnyObject = objc2::msg_send![cls, new];
-            let _: () = objc2::msg_send![center, setDelegate: delegate];
-            // Leak delegate — must live for app lifetime
-            std::mem::forget(Box::from_raw(delegate));
         }
     });
 }
