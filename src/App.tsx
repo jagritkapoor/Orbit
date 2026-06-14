@@ -372,6 +372,15 @@ export default function App() {
             </svg>
           )}
         </button>
+        {navigator.userAgent.includes("Win") && (
+          <button
+            className="win-close-btn"
+            onClick={() => getCurrentWindow().hide()}
+            title="Hide"
+          >
+            ✕
+          </button>
+        )}
       </div>
       <div
         className={`flex-1 overflow-hidden ${shake ? "shake" : ""}`}

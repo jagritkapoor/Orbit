@@ -742,6 +742,28 @@
   opacity: 0.9;
 }
 
+.win-close-btn {
+  background: none;
+  border: none;
+  padding: 4px 8px;
+  cursor: pointer;
+  color: var(--text-muted);
+  opacity: 0.5;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.15s ease, background 0.15s ease;
+  border-radius: 4px;
+  margin-left: 4px;
+}
+
+.win-close-btn:hover {
+  opacity: 1;
+  background: rgba(255, 60, 60, 0.15);
+  color: #ff4444;
+}
+
 /* ── Note date footer ────────────────────────────────────────────────────── */
 .note-date-footer {
   flex-shrink: 0;

@@ -181,7 +181,7 @@ function handleExpiry(key: string, state: TimerState) {
         if (!anyRunning()) stopTick();
         onTimerDeactivated?.(s.noteId, s.sectionIndex);
       }
-    }, 3000);
+    }, 5000);
     doneTimeouts.set(key, tid);
   } else {
     if (state.phase === "focus") {

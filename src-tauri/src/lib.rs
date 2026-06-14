@@ -93,6 +93,11 @@ pub fn run() {
             #[cfg(target_os = "macos")]
             window.set_visible_on_all_workspaces(true)?;
 
+            // On Windows, titleBarStyle:"Overlay" is a no-op — remove native
+            // decorations so our React title bar is the only one.
+            #[cfg(target_os = "windows")]
+            window.set_decorations(false)?;
+
             // Intercept close button, focus loss — hide instead of quit/close
             // Grace period prevents the startup focus-loss event from immediately hiding the window
             let ready = Arc::new(AtomicBool::new(false));
