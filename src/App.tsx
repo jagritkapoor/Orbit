@@ -343,10 +343,6 @@ export default function App() {
       <div
         className="title-bar"
         data-tauri-drag-region
-        onMouseDown={(e) => {
-          if ((e.target as HTMLElement).closest("button")) return;
-          getCurrentWindow().startDragging();
-        }}
       >
         <span className="title-bar-title">Orbit</span>
         <button
