@@ -63,6 +63,11 @@ Deleting the app from Applications does **not** delete your notes. To fully remo
 
 In Finder: press `Cmd+Shift+G`, paste `~/Library/Application Support`, then delete the `com.jagrit.orbit` folder (toggle hidden files with `Cmd+Shift+.` if it's not visible).
 
+**Windows:**
+
+1. Uninstall Orbit from **Settings → Apps**
+2. Press `Win+R`, type `%APPDATA%\com.jagrit.orbit`, hit Enter, and delete the folder
+
 ## Releases
 
 Releases are built automatically via GitHub Actions when a tag is pushed:
