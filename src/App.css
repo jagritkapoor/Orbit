@@ -712,6 +712,13 @@
   padding-right: 10px;
   -webkit-user-select: none;
   user-select: none;
+  -webkit-app-region: drag;
+  app-region: drag;
+}
+
+.title-bar button {
+  -webkit-app-region: no-drag;
+  app-region: no-drag;
 }
 
 .title-bar-title {
