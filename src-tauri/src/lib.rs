@@ -6,6 +6,60 @@ use tauri::{
 };
 use tauri_plugin_sql::{Migration, MigrationKind};
 
+#[cfg(target_os = "macos")]
+fn setup_notification_delegate() {
+    use objc2::runtime::{AnyClass, AnyObject, AnyProtocol, ClassBuilder, Sel};
+    use objc2::sel;
+    use std::sync::Once;
+
+    static REGISTER: Once = Once::new();
+    REGISTER.call_once(|| {
+        // UNNotificationPresentationOptions bit flags:
+        // Sound=1, Alert=2, Banner=4, List=8
+        // Use all four so banners appear on macOS 10.15 (alert) and 11+ (banner+list)
+        const PRESENT_OPTIONS: usize = 1 | 2 | 4 | 8;
+
+        unsafe extern "C-unwind" fn will_present(
+            _this: &AnyObject,
+            _cmd: Sel,
+            _center: *mut AnyObject,
+            _notification: *mut AnyObject,
+            completion_handler: *const block2::Block<dyn Fn(usize)>,
+        ) {
+            if let Some(handler) = unsafe { completion_handler.as_ref() } {
+                handler.call((PRESENT_OPTIONS,));
+            }
+        }
+
+        unsafe {
+            let ns_object = AnyClass::get(c"NSObject").expect("NSObject not found");
+            let mut builder = ClassBuilder::new(c"OrbitNotifDelegate", ns_object)
+                .expect("OrbitNotifDelegate class already registered");
+
+            if let Some(proto) = AnyProtocol::get(c"UNUserNotificationCenterDelegate") {
+                builder.add_protocol(proto);
+            }
+
+            builder.add_method(
+                sel!(userNotificationCenter:willPresentNotification:withCompletionHandler:),
+                will_present as unsafe extern "C-unwind" fn(_, _, _, _, _),
+            );
+
+            let cls = builder.register();
+
+            // Instantiate delegate and set on UNUserNotificationCenter
+            let center_cls = AnyClass::get(c"UNUserNotificationCenter")
+                .expect("UNUserNotificationCenter not found");
+            let center: *mut AnyObject =
+                objc2::msg_send![center_cls, currentNotificationCenter];
+            let delegate: *mut AnyObject = objc2::msg_send![cls, new];
+            let _: () = objc2::msg_send![center, setDelegate: delegate];
+            // Leak delegate — must live for app lifetime
+            std::mem::forget(Box::from_raw(delegate));
+        }
+    });
+}
+
 fn show_window(app: &tauri::AppHandle) {
     if let Some(win) = app.get_webview_window("main") {
         let _ = win.show();
@@ -49,6 +103,10 @@ pub fn run() {
             // Hide from Dock and Cmd+Tab — menubar-only app
             #[cfg(target_os = "macos")]
             app.set_activation_policy(tauri::ActivationPolicy::Accessory);
+
+            // Force notification banners even when Orbit is considered foreground
+            #[cfg(target_os = "macos")]
+            setup_notification_delegate();
 
             // System tray
             let quit = MenuItem::with_id(app, "quit", "Quit Orbit", true, None::<&str>)?;
