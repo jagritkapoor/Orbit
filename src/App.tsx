@@ -36,6 +36,7 @@ export default function App() {
   useLayoutEffect(() => {
     document.documentElement.classList.toggle("dark", isDark);
     document.documentElement.classList.toggle("light", !isDark);
+    getCurrentWindow().setTheme(isDark ? "dark" : "light").catch(() => {});
   }, [isDark]);
 
   const toggleTheme = () => {
@@ -341,6 +342,7 @@ export default function App() {
     <div className="h-full flex flex-col overflow-hidden">
       <div
         className="title-bar"
+        data-tauri-drag-region
         onMouseDown={(e) => {
           if ((e.target as HTMLElement).closest("button")) return;
           getCurrentWindow().startDragging();

@@ -90,7 +90,7 @@ export function FullScreenTimerView({
         </svg>
 
         <div className="fs-timer-center">
-          <div className="fs-timer-time">{fmt(remaining)}</div>
+          {!isDone && <div className="fs-timer-time">{fmt(remaining)}</div>}
           {state.type === "pomo" && (
             <div className="fs-timer-phase">
               {state.phase === "break" ? "Break" : "Focus"} #{state.pomoCycle}
